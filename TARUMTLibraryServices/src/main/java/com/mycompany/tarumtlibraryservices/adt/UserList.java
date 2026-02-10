@@ -84,4 +84,8 @@ public class UserList { //List ADT
             current = current.next;
         }
     }
+    public boolean isEmpty() {
+        return head == null;
+    }
+
 }

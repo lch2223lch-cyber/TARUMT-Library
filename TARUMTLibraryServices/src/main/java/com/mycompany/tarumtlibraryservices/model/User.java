@@ -19,6 +19,14 @@ public class User {
         this.role = role;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
     public String getUserId() {
         return userId;
     }
@@ -33,6 +41,18 @@ public class User {
     
     @Override
     public String toString() {
-        return userId + " | " + name + " | " + role;
+        return userId + " | " + name + " | " + getRoleName();
+    }
+    private String getRoleName() {
+        switch (role) {
+            case "S":
+                return "Student";
+            case "A":
+                return "Admin";
+            case "L":
+                return "Librarian";
+            default:
+                return "Unknown";
+        }
     }
 }
