@@ -43,7 +43,7 @@ public class User {
     public String toString() {
         return userId + " | " + name + " | " + getRoleName();
     }
-    private String getRoleName() {
+    public String getRoleName() {
         switch (role) {
             case "S":
                 return "Student";
