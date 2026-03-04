@@ -10,11 +10,19 @@ import com.mycompany.tarumtlibraryservices.model.Book;
  * @author junji
  */
 public class BookNode {
-    Book data; //element in list adt
+    private Book data; //element in list adt
     BookNode next; //link to next element
     
     public BookNode(Book data) {
         this.data = data;
         this.next = null; // by default, next is null
+    }
+
+    public Book getData() {
+        return data;
+    }
+
+    public BookNode getNext() {
+        return next;
     }
 }

@@ -15,7 +15,7 @@ public class Book {
     private BookSource source; //NEW or DONATED
     private boolean isAvailable; //Avaiable / Borrowed / Lost
     
-    public Book(String bookId, String title, String author, BookSource source){
+    public Book(String bookId, String title, String author, BookSource source, boolean isAvailable){
         this.bookId = bookId;
         this.title = title;
         this.author = author;
@@ -59,7 +59,7 @@ public class Book {
         return source;
     }
 
-    public boolean isIsAvailable() {
+    public boolean isAvailable() {
         return isAvailable;
     }
 

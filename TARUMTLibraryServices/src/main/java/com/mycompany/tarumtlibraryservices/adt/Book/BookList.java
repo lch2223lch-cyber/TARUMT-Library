@@ -18,6 +18,10 @@ public class BookList { //List ADT
         head = null;
     }
     
+    public BookNode getHead(){
+        return head;
+    }
+    
     // Add unique bookId
     public boolean addBook(Book book) {
         if (getBookById(book.getBookId()) != null) {
@@ -42,8 +46,8 @@ public class BookList { //List ADT
         BookNode current = head;
 
         while (current != null) {
-            if (current.data.getBookId().equals(bookId)) {
-                return current.data;
+            if (current.getData().getBookId().equals(bookId)) {
+                return current.getData();
             }
             current = current.next;
         }
@@ -55,14 +59,14 @@ public class BookList { //List ADT
             return false;
         }
 
-        if (head.data.getBookId().equals(bookId)) {
+        if (head.getData().getBookId().equals(bookId)) {
             head = head.next;
             return true;
         }
 
         BookNode current = head;
         while (current.next != null) {
-            if (current.next.data.getBookId().equals(bookId)) {
+            if (current.next.getData().getBookId().equals(bookId)) {
                 current.next = current.next.next;
                 return true;
             }
@@ -80,7 +84,7 @@ public class BookList { //List ADT
         }
 
         while (current != null) {
-            System.out.println(current.data);
+            System.out.println(current.getData());
             current = current.next;
         }
     }
@@ -97,9 +101,9 @@ public class BookList { //List ADT
         boolean found = false;
 
         while (current != null) {
-            String title = current.data.getTitle();
+            String title = current.getData().getTitle();
             if (title != null && title.toLowerCase().contains(k)) {
-                System.out.println(current.data);
+                System.out.println(current.getData());
                 found = true;
             }
             current = current.next;
@@ -122,9 +126,9 @@ public class BookList { //List ADT
         boolean found = false;
 
         while (current != null) {
-            String author = current.data.getAuthor();
+            String author = current.getData().getAuthor();
             if (author != null && author.toLowerCase().contains(k)) {
-                System.out.println(current.data);
+                System.out.println(current.getData());
                 found = true;
             }
             current = current.next;

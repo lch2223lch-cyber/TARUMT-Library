@@ -7,6 +7,9 @@ package com.mycompany.tarumtlibraryservices.app;
 import com.mycompany.tarumtlibraryservices.adt.Book.BookList;
 import com.mycompany.tarumtlibraryservices.model.Book;
 import com.mycompany.tarumtlibraryservices.model.BookSource;
+import com.mycompany.tarumtlibraryservices.service.BookFileManager;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Scanner;
 
 /**
@@ -22,6 +25,7 @@ public class BookManagement {
 
         Scanner sc = new Scanner(System.in);
         BookList bookList = new BookList();
+        BookFileManager.loadBooks(bookList);
         int choice = 0;
 
         do {
@@ -46,12 +50,22 @@ public class BookManagement {
             switch (choice) {
 
                 case 1: // CREATE
-                    System.out.print("Enter Book ID (B001): ");
-                    String id = sc.nextLine().trim();
+                    String id;
+                    while (true) {
+                        System.out.print("Enter Book ID (B001): ");
+                        id = sc.nextLine().trim();
 
-                    if (id.isEmpty() || !id.matches("[B]\\d{3}")) {
-                        System.out.println("Invalid ID format.");
-                        break;
+                        if (id.isEmpty() || !id.matches("B\\d{3}")) {
+                            System.out.println("Invalid ID format. Example: B001");
+                            continue;
+                        }
+
+                        if (bookList.getBookById(id) != null) {
+                            System.out.println("Book ID already exists. Please enter another ID.");
+                            continue;
+                        }
+
+                        break; // valid and unique ID
                     }
 
                     String title;
@@ -101,11 +115,15 @@ public class BookManagement {
                         }
                     }
                     
-                    if (bookList.addBook(new Book(id, title, author, source))) {
-                        System.out.println("Book added successfully.");
-                    } else {
-                        System.out.println("Error: Book ID already exists. Cannot add duplicate.");
-                    }   
+                    Book newBook = new Book(id, title, author, source, true);
+                    
+                    if(bookList.addBook(newBook)){
+                        System.out.println("Book added successful"); 
+                        BookFileManager.addBook(newBook);
+                        
+                    } else{
+                        System.out.println("Error: Book ID already exists. Cannot be duplicate");
+                    }
                     
                     break;
 
@@ -173,6 +191,8 @@ public class BookManagement {
                     if (!newAuthor.isEmpty()) {
                         bookToUpdate.setAuthor(newAuthor);
                     }
+                    
+                    BookFileManager.updateBooks(bookList); //to update the txt
 
                     System.out.println("Book updated successfully.");
                     break;
@@ -187,12 +207,16 @@ public class BookManagement {
                     if (confirm.equalsIgnoreCase("Y")) {
                         if (bookList.removeBookById(deleteId)) {
                             System.out.println( "This book is deleted.");
+                            
+                            //after delete the data, also need update to txt
+                            BookFileManager.updateBooks(bookList);
                         } else {
                             System.out.println("Book not found.");
                         }
                     } else {
                         System.out.println("Delete cancelled.");
                     }
+                    
                     break;
 
                 case 6:
