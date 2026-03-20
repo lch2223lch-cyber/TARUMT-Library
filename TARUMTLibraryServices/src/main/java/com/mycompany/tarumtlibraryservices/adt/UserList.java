@@ -1,280 +1,225 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.tarumtlibraryservices.adt;
 
 import com.mycompany.tarumtlibraryservices.model.User;
 import java.io.*;
 
 /**
+ * UserList ADT - Manages User objects Extends GenericList with User-specific
+ * functionality
  *
- * @author ch
+ * @author [Lim Chuin Hao]
  */
-public class UserList { //List ADT
-    
-    private UserNode head; //points to first node in list
-    private int size; //track size for easier counting
-    private static final String FILE_NAME = "users.txt";
-    
+public class UserList extends GenericList<User> {
+
+    private static final String DEFAULT_FILE_NAME = "users.txt";
+
     public UserList() {
-        head = null;
-        size = 0;
-        loadFromFile(); // Load existing data from file if available
+        super(DEFAULT_FILE_NAME);
     }
-    
-    // Add user-unique userId
+
+    public UserList(String fileName) {
+        super(fileName);
+    }
+
+    // ========== USER-SPECIFIC METHODS ==========
+    /**
+     * Add user with duplicate ID checking
+     */
     public boolean addUser(User user) {
         if (getUserById(user.getUserId()) != null) {
-            return false; // duplicate ID not allowed
+            return false; // Duplicate ID
         }
-
-        UserNode newNode = new UserNode(user);
-
-        if (head == null) {
-            head = newNode;
-        } else {
-            UserNode current = head;
-            while (current.next != null) {
-                current = current.next;
-            }
-            current.next = newNode;
-        }
-        size++;
-        saveToFile(); // Save to file after adding
-        return true;
+        return add(user);
     }
-    
-    // Retrieve user by ID
+
+    /**
+     * Get user by ID
+     */
     public User getUserById(String userId) {
-        UserNode current = head;
-
-        while (current != null) {
-            if (current.data.getUserId().equalsIgnoreCase(userId)) {
-                return current.data;
-            }
-            current = current.next;
-        }
-        return null;
+        return findFirst(user -> user.getUserId().equalsIgnoreCase(userId));
     }
-    
-    // Remove user by ID
+
+    /**
+     * Remove user by ID
+     */
     public boolean removeUserById(String userId) {
-        if (head == null) {
+        return removeIf(user -> user.getUserId().equalsIgnoreCase(userId));
+    }
+
+    /**
+     * Update user information
+     */
+    public boolean updateUser(String userId, String newName, String newRole) {
+        User user = getUserById(userId);
+        if (user == null) {
             return false;
         }
 
-        if (head.data.getUserId().equalsIgnoreCase(userId)) {
-            head = head.next;
-            size--;
-            saveToFile(); // Save to file after deletion
-            return true;
+        if (newName != null && !newName.trim().isEmpty()) {
+            user.setName(newName);
         }
 
-        UserNode current = head;
-        while (current.next != null) {
-            if (current.next.data.getUserId().equalsIgnoreCase(userId)) {
-                current.next = current.next.next;
-                size--;
-                saveToFile(); // Save to file after deletion
-                return true;
+        if (newRole != null && !newRole.trim().isEmpty()) {
+            if (newRole.matches("[SLA]")) {
+                user.setRole(newRole);
             }
-            current = current.next;
         }
-        return false;
+
+        saveToFile(); // Persist changes
+        return true;
     }
-    
-    // Update user
-    public boolean updateUser(String userId, String newName, String newRole) {
-        User user = getUserById(userId);
-        if (user != null) {
-            if (newName != null && !newName.trim().isEmpty()) {
-                user.setName(newName);
-            }
-            if (newRole != null && !newRole.trim().isEmpty()) {
-                // Validate role
-                if (newRole.matches("[SLA]")) {
-                    user.setRole(newRole);
-                }
-            }
-            saveToFile(); // Save to file after update
-            return true;
-        }
-        return false;
-    }
-    
-    // Display all users
+
+    /**
+     * Display all users with formatted output
+     */
     public void displayAllUsers() {
-        UserNode current = head;
-
-        if (current == null) {
+        if (isEmpty()) {
             System.out.println("No users available.");
             return;
         }
 
         System.out.println("\n" + "=".repeat(80));
-        System.out.printf("%-10s | %-25s | %-15s | %-20s%n", 
-            "User ID", "Name", "Role", "Role Description");
+        System.out.printf("%-10s | %-25s | %-15s | %-20s%n",
+                "User ID", "Name", "Role", "Role Description");
         System.out.println("=".repeat(80));
-        
-        while (current != null) {
-            User user = current.data;
+
+        forEach(user -> {
             System.out.printf("%-10s | %-25s | %-10s | %-20s%n",
-                user.getUserId(),
-                truncateString(user.getName(), 25),
-                user.getRole(),
-                user.getRoleName());
-            current = current.next;
-        }
+                    user.getUserId(),
+                    truncateString(user.getName(), 25),
+                    user.getRole(),
+                    user.getRoleName());
+        });
+
         System.out.println("=".repeat(80));
-        System.out.println("Total users: " + size);
+        System.out.println("Total users: " + getSize());
     }
-    
-    // Get user at specific index (for iteration without collections)
-    public User getUserAtIndex(int index) {
-        if (index < 0 || index >= size) {
+
+    /**
+     * Count users by role
+     */
+    public int countUsersByRole(String role) {
+        return count(user -> user.getRole().equalsIgnoreCase(role));
+    }
+
+    /**
+     * Search users by name (partial match)
+     */
+    public User[] searchUsersByName(String keyword) {
+        return findAll(
+                user -> user.getName().toLowerCase().contains(keyword.toLowerCase()),
+                User[]::new
+        );
+    }
+
+    /**
+     * Get all users as array
+     */
+    public User[] getAllUsers() {
+        return toArray(User[]::new);
+    }
+
+    /**
+     * Get active users only
+     */
+    public User[] getActiveUsers() {
+        return findAll(User::isActive, User[]::new);
+    }
+
+    /**
+     * Get users by role
+     */
+    public User[] getUsersByRole(String role) {
+        return findAll(user -> user.getRole().equalsIgnoreCase(role), User[]::new);
+    }
+
+    /**
+     * Check if user exists
+     */
+    public boolean userExists(String userId) {
+        return getUserById(userId) != null;
+    }
+
+    // ========== OVERRIDDEN METHODS FOR PERSISTENCE ==========
+    @Override
+    protected String saveElement(User user) {
+        // Format: userId|name|role|email|phone|isActive
+        return user.getUserId() + "|"
+                + user.getName() + "|"
+                + user.getRole() + "|"
+                + (user.getEmail() != null ? user.getEmail() : "") + "|"
+                + (user.getPhone() != null ? user.getPhone() : "") + "|"
+                + user.isActive();
+    }
+
+    @Override
+    protected User parseElement(String line) {
+        // Skip empty lines
+        if (line.trim().isEmpty()) {
             return null;
         }
-        
-        UserNode current = head;
-        for (int i = 0; i < index; i++) {
-            current = current.next;
+
+        String[] parts = line.split("\\|");
+
+        // Check if we have at least userId and name
+        if (parts.length < 2) {
+            return null;
         }
-        return current.data;
-    }
-    
-    // Count users by role
-    public int countUsersByRole(String role) {
-        int count = 0;
-        UserNode current = head;
-        while (current != null) {
-            if (current.data.getRole().equalsIgnoreCase(role)) {
-                count++;
+
+        String userId = parts[0].trim();
+        String name = parts[1].trim();
+
+        // Determine role
+        String role = "";
+        if (parts.length >= 3) {
+            role = parts[2].trim();
+        }
+
+        // If role is empty or invalid, try to infer from userId
+        if (role.isEmpty() || !role.matches("[SLA]")) {
+            if (userId.toUpperCase().startsWith("A")) {
+                role = "A";
+            } else if (userId.toUpperCase().startsWith("L")) {
+                role = "L";
+            } else if (userId.toUpperCase().startsWith("S")) {
+                role = "S";
+            } else {
+                role = "S"; // Default to student
             }
-            current = current.next;
         }
-        return count;
-    }
-    
-    // Search users by name (partial match) - returns array of users
-    public User[] searchUsersByName(String keyword) {
-        // First, count matches
-        int matchCount = 0;
-        UserNode current = head;
-        while (current != null) {
-            if (current.data.getName().toLowerCase().contains(keyword.toLowerCase())) {
-                matchCount++;
-            }
-            current = current.next;
-        }
-        
-        // Create array of matching users
-        User[] results = new User[matchCount];
-        if (matchCount == 0) {
-            return results;
-        }
-        
-        // Fill array with matches
-        int index = 0;
-        current = head;
-        while (current != null) {
-            if (current.data.getName().toLowerCase().contains(keyword.toLowerCase())) {
-                results[index++] = current.data;
-            }
-            current = current.next;
-        }
-        
-        return results;
-    }
-    
-    // Get all users as array (for reporting)
-    public User[] getAllUsers() {
-        User[] users = new User[size];
-        UserNode current = head;
-        int index = 0;
-        
-        while (current != null) {
-            users[index++] = current.data;
-            current = current.next;
-        }
-        
-        return users;
-    }
-    
-    // Save to file
-    private void saveToFile() {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(FILE_NAME))) {
-            UserNode current = head;
-            while (current != null) {
-                User user = current.data;
-                // Format: userId|name|role
-                writer.println(user.getUserId() + "|" + user.getName() + "|" + user.getRole());
-                current = current.next;
-            }
-            System.out.println("Data saved to " + FILE_NAME); // Optional: confirm save
-        } catch (IOException e) {
-            System.err.println("Error saving to file: " + e.getMessage());
-        }
-    }
-    
-    // Load from file
-    private void loadFromFile() {
-        File file = new File(FILE_NAME);
-        if (!file.exists()) {
-            System.out.println("No existing data file found. Starting with empty list.");
-            return; // No file yet, start with empty list
-        }
-        
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            String line;
-            int loadedCount = 0;
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split("\\|");
-                if (parts.length == 3) {
-                    User user = new User(parts[0].trim(), parts[1].trim(), parts[2].trim());
-                    addUserDirect(user);
-                    loadedCount++;
-                }
-            }
-            if (loadedCount > 0) {
-                System.out.println("Loaded " + loadedCount + " users from " + FILE_NAME);
-            }
-        } catch (IOException e) {
-            System.err.println("Error loading from file: " + e.getMessage());
-        }
-    }
-    
-    // Helper method to add user without saving to file (for loading only)
-    private void addUserDirect(User user) {
-        // Check for duplicate during load (avoid duplicates in file)
-        if (getUserById(user.getUserId()) != null) {
-            System.out.println("Warning: Duplicate user ID " + user.getUserId() + " found in file. Skipping.");
-            return;
-        }
-        
-        UserNode newNode = new UserNode(user);
-        if (head == null) {
-            head = newNode;
+
+        // Create user
+        User user;
+
+        // Check if we have email and phone
+        if (parts.length >= 5) {
+            String email = parts[3].trim();
+            String phone = parts[4].trim();
+            user = new User(userId, name, role, email, phone);
+        } else if (parts.length >= 4) {
+            String email = parts[3].trim();
+            user = new User(userId, name, role, email, "");
         } else {
-            UserNode current = head;
-            while (current.next != null) {
-                current = current.next;
-            }
-            current.next = newNode;
+            user = new User(userId, name, role);
         }
-        size++;
+
+        // Check if we have active status
+        if (parts.length >= 6) {
+            try {
+                user.setActive(Boolean.parseBoolean(parts[5].trim()));
+            } catch (Exception e) {
+                // Keep default active status
+            }
+        }
+
+        return user;
     }
-    
-    public boolean isEmpty() {
-        return head == null;
-    }
-    
-    public int getSize() {
-        return size;
-    }
-    
+
+    // ========== HELPER METHODS ==========
     private String truncateString(String str, int length) {
-        if (str.length() <= length) return str;
+        if (str.length() <= length) {
+            return str;
+        }
         return str.substring(0, length - 3) + "...";
     }
 }

@@ -1,5 +1,2 @@
-S001|John Student|S
-S002|Jane Learner|S
-L001|Bob Librarian|L
-A001|Alice Admin|A
-S007|Lo9|S
+A001|admin|A|alice@libraryadmin.tarc.edu.my|0187762987|true
+S001|alee|S|alee@tarc.edu.my|01921837|true
