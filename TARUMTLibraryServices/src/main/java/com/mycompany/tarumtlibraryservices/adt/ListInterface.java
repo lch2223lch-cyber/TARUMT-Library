@@ -8,12 +8,6 @@ package com.mycompany.tarumtlibraryservices.adt;
  */
 public interface ListInterface<T> {
 
-    /**
-     * Add element to the end of the list
-     *
-     * @param newEntry element to add
-     * @return true if added successfully
-     */
     boolean add(T newEntry);
 
     boolean add(int position, T newEntry);
