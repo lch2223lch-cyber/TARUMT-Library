@@ -38,7 +38,7 @@ public class GenericList<T> {
         }
     }
 
-    // ========== BASIC LIST OPERATIONS ==========
+    //LIST OPERATIONS
     /**
      * Add element to the end of the list
      *
@@ -63,7 +63,6 @@ public class GenericList<T> {
         }
         size++;
 
-        // Only save to file if fileName is set AND we're not currently loading
         if (fileName != null && !isLoading) {
             saveToFile();
         }
