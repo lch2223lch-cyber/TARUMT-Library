@@ -1,8 +1,11 @@
 package com.mycompany.tarumtlibraryservices.app;
 
+import com.mycompany.tarumtlibraryservices.adt.Book.BookList;
+import com.mycompany.tarumtlibraryservices.adt.TransactionList;
 import com.mycompany.tarumtlibraryservices.adt.UserList;
 import com.mycompany.tarumtlibraryservices.model.User;
 import com.mycompany.tarumtlibraryservices.service.AuthService;
+import com.mycompany.tarumtlibraryservices.service.BookFileManager;
 import com.mycompany.tarumtlibraryservices.ui.MainMenu;
 import java.util.Scanner;
 import java.io.File;
@@ -13,6 +16,11 @@ public class MainApp {
         Scanner sc = new Scanner(System.in);
         UserList userList = new UserList();
         AuthService authService = new AuthService(userList);
+
+        // Initialise shared data stores
+        BookList bookList = new BookList();
+        BookFileManager.loadBooks(bookList);
+        TransactionList transactionList = new TransactionList();
 
         // Check if there's at least one admin user
         if (!hasAdminUser(userList)) {
@@ -26,8 +34,8 @@ public class MainApp {
             return;
         }
 
-        // Launch main menu with 4 modules
-        MainMenu mainMenu = new MainMenu(sc, userList, currentUser);
+        // Launch main menu with all 4 modules
+        MainMenu mainMenu = new MainMenu(sc, userList, bookList, transactionList, currentUser);
         mainMenu.start();
 
         authService.logout();

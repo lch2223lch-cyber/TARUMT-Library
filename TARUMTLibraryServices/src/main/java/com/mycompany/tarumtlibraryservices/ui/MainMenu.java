@@ -1,18 +1,25 @@
 package com.mycompany.tarumtlibraryservices.ui;
 
+import com.mycompany.tarumtlibraryservices.adt.Book.BookList;
+import com.mycompany.tarumtlibraryservices.adt.TransactionList;
 import com.mycompany.tarumtlibraryservices.adt.UserList;
 import com.mycompany.tarumtlibraryservices.model.User;
 import java.util.Scanner;
 
 public class MainMenu {
 
-    private Scanner sc;
-    private UserList userList;
-    private User currentUser;
+    private final Scanner sc;
+    private final UserList userList;
+    private final BookList bookList;
+    private final TransactionList transactionList;
+    private final User currentUser;
 
-    public MainMenu(Scanner sc, UserList userList, User currentUser) {
+    public MainMenu(Scanner sc, UserList userList, BookList bookList,
+                    TransactionList transactionList, User currentUser) {
         this.sc = sc;
         this.userList = userList;
+        this.bookList = bookList;
+        this.transactionList = transactionList;
         this.currentUser = currentUser;
     }
 
@@ -84,19 +91,20 @@ public class MainMenu {
                 return true;
 
             case 2:
-                // Module 2: Book Management - Team Member 2
+                // Module 2: Book Management
                 BookMenu bookMenu = new BookMenu(sc, currentUser);
                 bookMenu.start();
                 return true;
 
             case 3:
-                // Module 3: Borrow & Return - Team Member 3
-                BorrowReturnMenu borrowMenu = new BorrowReturnMenu(sc, currentUser);
+                // Module 3: Borrow & Return
+                BorrowReturnMenu borrowMenu = new BorrowReturnMenu(
+                        sc, currentUser, bookList, userList, transactionList);
                 borrowMenu.start();
                 return true;
 
             case 4:
-                // Module 4: Room Booking - Team Member 4
+                // Module 4: Room Booking
                 RoomMenu roomMenu = new RoomMenu(sc, currentUser);
                 roomMenu.start();
                 return true;
