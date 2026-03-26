@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.tarumtlibraryservices.service;
 
 import com.mycompany.tarumtlibraryservices.adt.UserList;
@@ -15,7 +11,6 @@ public class AuthService {
 
     private UserList userList;
     private User currentUser;
-    private static final String ADMIN_MASTER_CODE = "ADMIN2024"; // For first-time admin setup
 
     public AuthService(UserList userList) {
         this.userList = userList;
@@ -110,19 +105,5 @@ public class AuthService {
             return false;
         }
         return currentUser.canViewReports();
-    }
-
-    // Setup first admin if no users exist
-    public boolean setupFirstAdmin() {
-        if (userList.getSize() == 0) {
-            System.out.println("\n=== FIRST TIME SETUP ===");
-            System.out.println("No users found. Setting up initial administrator.");
-            System.out.print("Enter Master Code: ");
-            // This would be handled in MainApp with Scanner
-
-            // For now, return that setup is needed
-            return true;
-        }
-        return false;
     }
 }
