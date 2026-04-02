@@ -1,0 +1,5 @@
+R0033|Dis,1,false,true,true,true|S001,,,
+R001|Discussion Room With Computer,5,true,false,true,true|,S001,,
+R002|Discussion Room,10,true,true,true,true|,,,
+r003|Discussion Room With Projector,8,true,true,true,true|,,,
+R004|Blbla,2,true,true,true,true|,,,
