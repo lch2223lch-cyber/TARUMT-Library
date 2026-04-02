@@ -1,163 +1,214 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.mycompany.tarumtlibraryservices.app;
 
 import com.mycompany.tarumtlibraryservices.adt.UserList;
 import com.mycompany.tarumtlibraryservices.model.User;
+import com.mycompany.tarumtlibraryservices.service.AuthService;
+import com.mycompany.tarumtlibraryservices.ui.MainMenu;
 import java.util.Scanner;
-
-/**
- *
- * @author ch
- */
+import java.io.File;
 
 public class MainApp {
 
     public static void main(String[] args) {
-
         Scanner sc = new Scanner(System.in);
         UserList userList = new UserList();
-        int choice = 0;
+        AuthService authService = new AuthService(userList);
 
-        do {
-            System.out.println("\n=== User Management System ===");
-            System.out.println("1. Add User");
-            System.out.println("2. View All Users");
-            System.out.println("3. Search User");
-            System.out.println("4. Update User");
-            System.out.println("5. Delete User");
-            System.out.println("6. Exit");
-            
+        // Check if there's at least one admin user
+        if (!hasAdminUser(userList)) {
+            showSetupMenu(sc, userList);
+        }
+
+        // Login
+        User currentUser = loginUser(sc, authService);
+        if (currentUser == null) {
+            System.out.println("Login failed. Exiting...");
+            return;
+        }
+
+        // Launch main menu with 4 modules
+        MainMenu mainMenu = new MainMenu(sc, userList, currentUser);
+        mainMenu.start();
+
+        authService.logout();
+        sc.close();
+    }
+
+    private static boolean hasAdminUser(UserList userList) {
+        User[] users = userList.getAllUsers();
+        for (User user : users) {
+            if (user.getRole().equals("A")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void showSetupMenu(Scanner sc, UserList userList) {
+        while (true) {
+            System.out.println("\n================================");
+            System.out.println("=         SYSTEM SETUP                   =");
+            System.out.println("=================================");
+            System.out.println("1. Create New Administrator Account");
+            System.out.println("2. Clear All Users and Start Fresh");
+            System.out.println("3. Exit Program");
             System.out.print("Enter your choice: ");
+
             String input = sc.nextLine().trim();
-            
-            if (!input.matches("[1-6]")) {
-                System.out.println("Please enter a number between 1 and 6.");
+
+            if (input.equals("1")) {
+                createAdminAccount(sc, userList);
+                if (hasAdminUser(userList)) {
+                    System.out.println("\n✅ Admin account created successfully!");
+                    return;
+                }
+            } else if (input.equals("2")) {
+                clearAllUsers(userList);
+                System.out.println("\n✅ All users have been cleared.");
+                createAdminAccount(sc, userList);
+                if (hasAdminUser(userList)) {
+                    System.out.println("\n✅ Admin account created successfully!");
+                    return;
+                }
+            } else if (input.equals("3")) {
+                System.out.println("Exiting program...");
+                System.exit(0);
+            } else {
+                System.out.println("Invalid choice. Please enter 1, 2, or 3.");
+            }
+        }
+    }
+
+    private static void createAdminAccount(Scanner sc, UserList userList) {
+        System.out.println("\n=== CREATE ADMINISTRATOR ACCOUNT ===");
+
+        String id;
+        while (true) {
+            System.out.print("Enter Admin User ID (must start with A, e.g., A001): ");
+            id = sc.nextLine().trim().toUpperCase();
+
+            if (id.isEmpty()) {
+                System.out.println("User ID cannot be empty.");
                 continue;
             }
 
-            choice = Integer.parseInt(input);
-
-            switch (choice) {
-
-                case 1: // CREATE
-                    System.out.print("Enter User ID (S001 / A001): ");
-                    String id = sc.nextLine().trim();
-
-                    if (id.isEmpty() || !id.matches("[SA]\\d{3}")) {
-                        System.out.println("Invalid ID format.");
-                        break;
-                    }
-
-                    String name;
-                    while (true) {
-                        System.out.print("Enter Name: ");
-                        name = sc.nextLine().trim();
-
-                        if (name.isEmpty() || !name.matches("[A-Za-z ]+")) {
-                            System.out.println("Name must contain alphabets only. Try again.");
-                        } else {
-                            break; // valid input, exit loop
-                        }
-                    }
-
-
-                    System.out.print("Enter Role: (S/L/A) ");
-                    String role = sc.nextLine().trim();
-                    
-                    role = role.toUpperCase();
-
-                    if (role.isEmpty() || !role.matches("[SLA]")) {
-                        System.out.println("Role must be S (Student), L (Librarian), or A (Admin).");
-                        break;
-                    }
-
-                    if (userList.addUser(new User(id, name, role))) {
-                        System.out.println("User added successfully.");
-                    } else {
-                        System.out.println("User ID already exists.");
-                    }
-                    break;
-
-                case 2: // READ ALL
-                    if (userList.isEmpty()) {
-                        System.out.println("No users found.");
-                    } else {
-                        userList.displayAllUsers();
-                    }
-                    break;
-
-                case 3: // SEARCH
-                    System.out.print("Enter User ID to search: ");
-                    String searchId = sc.nextLine().trim();
-
-                    if (searchId.isEmpty()) {
-                        System.out.println("User ID cannot be empty.");
-                        break;
-                    }
-
-                    User found = userList.getUserById(searchId);
-                    System.out.println(found != null ? found : "User not found.");
-                    break;
-
-                case 4: // UPDATE
-                    System.out.print("Enter User ID to update: ");
-                    String updateId = sc.nextLine().trim();
-
-                    User user = userList.getUserById(updateId);
-
-                    if (user == null) {
-                        System.out.println("User not found.");
-                        break;
-                    }
-
-                    System.out.print("Enter new name: ");
-                    String newName = sc.nextLine().trim();
-
-                    if (!newName.isEmpty()) {
-                        user.setName(newName);
-                    }
-
-                    System.out.print("Enter new role: ");
-                    String newRole = sc.nextLine().trim();
-
-                    if (!newRole.isEmpty()) {
-                        user.setRole(newRole);
-                    }
-
-                    System.out.println("User updated successfully.");
-                    break;
-
-                case 5: // DELETE
-                    System.out.print("Enter User ID to delete: ");
-                    String deleteId = sc.nextLine().trim();
-
-                    System.out.print("Confirm delete? (Y/N): ");
-                    String confirm = sc.nextLine();
-
-                    if (confirm.equalsIgnoreCase("Y")) {
-                        if (userList.removeUserById(deleteId)) {
-                            System.out.println("User deleted.");
-                        } else {
-                            System.out.println("User not found.");
-                        }
-                    } else {
-                        System.out.println("Delete cancelled.");
-                    }
-                    break;
-
-                case 6:
-                    System.out.println("Exiting system...");
-                    break;
-
-                default:
-                    System.out.println("Invalid choice. Enter 1–6.");
+            if (!id.matches("A\\d{3}")) {
+                System.out.println("Invalid ID format. Admin ID must start with 'A' followed by 3 digits (e.g., A001)");
+                continue;
             }
 
-        } while (choice != 6);
+            if (userList.getUserById(id) != null) {
+                System.out.println("User ID already exists. Please use a different ID.");
+                continue;
+            }
 
-        sc.close();
+            break;
+        }
+
+        String name;
+        while (true) {
+            System.out.print("Enter Admin Name: ");
+            name = sc.nextLine().trim();
+
+            if (name.isEmpty()) {
+                System.out.println("Name cannot be empty.");
+                continue;
+            }
+
+            if (!name.matches("[A-Za-z ]+")) {
+                System.out.println("Name must contain only alphabets and spaces.");
+                continue;
+            }
+
+            break;
+        }
+
+        String email;
+        while (true) {
+            System.out.print("Enter Email (must end with @tarc.edu.my): ");
+            email = sc.nextLine().trim();
+
+            if (email.isEmpty()) {
+                System.out.println("Email is required for admin.");
+                continue;
+            }
+
+            if (!User.isValidEmail(email)) {
+                System.out.println("Invalid email format! Email must end with @tarc.edu.my");
+                continue;
+            }
+            break;
+        }
+
+        String phone;
+        while (true) {
+            System.out.print("Enter Phone Number (10 digits, e.g., 0123456789): ");
+            phone = sc.nextLine().trim();
+
+            if (phone.isEmpty()) {
+                System.out.println("Phone number is required for admin.");
+                continue;
+            }
+
+            if (!User.isValidPhone(phone)) {
+                System.out.println("Invalid phone number! Must be exactly 10 digits.");
+                continue;
+            }
+            break;
+        }
+
+        User admin = new User(id, name, "A", email, User.formatPhone(phone));
+
+        if (userList.addUser(admin)) {
+            System.out.println("\n✅ Administrator account created successfully!");
+        } else {
+            System.out.println("\n❌ Failed to create administrator account.");
+        }
+    }
+
+    private static void clearAllUsers(UserList userList) {
+        System.out.print("\n⚠️  Are you sure you want to delete ALL users? (Y/N): ");
+        Scanner sc = new Scanner(System.in);
+        String confirm = sc.nextLine().trim().toUpperCase();
+
+        if (confirm.equals("Y")) {
+            userList.clear();
+            File file = new File("users.txt");
+            if (file.exists()) {
+                file.delete();
+            }
+            System.out.println("All users have been cleared from the system.");
+        } else {
+            System.out.println("Clear operation cancelled.");
+        }
+    }
+
+    private static User loginUser(Scanner sc, AuthService authService) {
+        System.out.println("\n╔════════════════════════════════════════╗");
+        System.out.println("║     TARUMT LIBRARY SERVICES           ║");
+        System.out.println("║            LOGIN                      ║");
+        System.out.println("╚════════════════════════════════════════╝");
+
+        int attempts = 0;
+        while (attempts < 3) {
+            System.out.print("User ID: ");
+            String userId = sc.nextLine().trim();
+
+            if (userId.isEmpty()) {
+                System.out.println("User ID cannot be empty.");
+                attempts++;
+                continue;
+            }
+
+            User user = authService.login(userId);
+            if (user != null) {
+                return user;
+            }
+
+            attempts++;
+            System.out.println("Login failed. Attempts remaining: " + (3 - attempts));
+        }
+
+        return null;
     }
 }

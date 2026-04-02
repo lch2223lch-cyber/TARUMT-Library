@@ -1,0 +1,2 @@
+A001|admin|A|alice@libraryadmin.tarc.edu.my|0187762987|true
+S001|alee|S|alee@tarc.edu.my|01921837|true

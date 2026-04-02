@@ -1,0 +1,30 @@
+====================================================================================================
+TARUMT LIBRARY SERVICES - USER MANAGEMENT REPORT
+Report Type: Full Report
+Generated: 2026-03-04 17:51:10
+====================================================================================================
+
+SUMMARY STATISTICS:
+--------------------------------------------------
+Total Users         : 5
+Students            : 3
+Librarians          : 1
+Admins              : 1
+
+PERCENTAGE BREAKDOWN:
+--------------------------------------------------
+Students            : 60.0%
+Librarians          : 20.0%
+Admins              : 20.0%
+
+DETAILED USER LIST:
+User ID    | Name                           | Role            | Code      
+----------------------------------------------------------------------
+S001       | John Student                   | Student         | S         
+S002       | Jane Learner                   | Student         | S         
+L001       | Bob Librarian                  | Librarian       | L         
+A001       | Alice Admin                    | Admin           | A         
+S007       | Lo9                            | Student         | S         
+
+====================================================================================================
+END OF REPORT
