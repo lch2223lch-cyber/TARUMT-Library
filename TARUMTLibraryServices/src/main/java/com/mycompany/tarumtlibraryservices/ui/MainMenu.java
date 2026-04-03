@@ -1,6 +1,6 @@
 package com.mycompany.tarumtlibraryservices.ui;
 
-import com.mycompany.tarumtlibraryservices.adt.Book.BookList;
+import com.mycompany.tarumtlibraryservices.adt.BookList;
 import com.mycompany.tarumtlibraryservices.adt.TransactionList;
 import com.mycompany.tarumtlibraryservices.adt.UserList;
 import com.mycompany.tarumtlibraryservices.model.User;
@@ -92,7 +92,7 @@ public class MainMenu {
 
             case 2:
                 // Module 2: Book Management
-                BookMenu bookMenu = new BookMenu(sc, currentUser);
+                BookMenu bookMenu = new BookMenu(sc, currentUser, bookList);
                 bookMenu.start();
                 return true;
 

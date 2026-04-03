@@ -2,7 +2,7 @@ package com.mycompany.tarumtlibraryservices.service;
 
 import com.mycompany.tarumtlibraryservices.adt.TransactionList;
 import com.mycompany.tarumtlibraryservices.adt.UserList;
-import com.mycompany.tarumtlibraryservices.adt.Book.BookList;
+import com.mycompany.tarumtlibraryservices.adt.BookList;
 import com.mycompany.tarumtlibraryservices.model.Book;
 import com.mycompany.tarumtlibraryservices.model.Transaction;
 import com.mycompany.tarumtlibraryservices.model.User;
@@ -39,13 +39,13 @@ public class TransactionService {
     public String borrowBook(String userId, String bookId) {
         // Validate user
         User user = userList.getUserById(userId);
-        if (user == null)               return "User not found: " + userId;
-        if (!user.canBorrowBooks())      return "User account is inactive.";
+        if (user == null) return "User not found: " + userId;
+        if (!user.canBorrowBooks()) return "User account is inactive.";
 
         // Validate book
         Book book = bookList.getBookById(bookId);
-        if (book == null)               return "Book not found: " + bookId;
-        if (!book.isAvailable())        return "Book is currently not available (already borrowed).";
+        if (book == null) return "Book not found: " + bookId;
+        if (!book.isAvailable()) return "Book is currently not available (already borrowed).";
 
         // Check the user doesn't already have this book
         if (transactionList.hasActiveBorrow(userId, bookId)) {
@@ -59,7 +59,7 @@ public class TransactionService {
 
         // Mark book as unavailable
         book.setIsAvailable(false);
-        BookFileManager.updateBooks(bookList);
+        bookList.saveToFile();
 
         return "SUCCESS|" + newId;
     }
@@ -84,7 +84,7 @@ public class TransactionService {
 
         // Mark book as available again
         book.setIsAvailable(true);
-        BookFileManager.updateBooks(bookList);
+        bookList.saveToFile();
 
         return "SUCCESS|" + txn.getTransactionId();
     }
@@ -103,7 +103,8 @@ public class TransactionService {
         Transaction[] all = transactionList.getAllTransactions();
         int borrowed = 0, returned = 0;
         for (Transaction t : all) {
-            if (t.isBorrowed()) borrowed++; else returned++;
+            if (t.isBorrowed()) borrowed++;
+            else returned++;
         }
 
         System.out.println("\nSUMMARY:");
@@ -134,7 +135,10 @@ public class TransactionService {
         }
 
         int borrowed = 0, returned = 0;
-        for (Transaction t : txns) { if (t.isBorrowed()) borrowed++; else returned++; }
+        for (Transaction t : txns) {
+            if (t.isBorrowed()) borrowed++;
+            else returned++;
+        }
 
         System.out.printf("  Active borrows: %d  |  Returned: %d%n%n", borrowed, returned);
         transactionList.displayForUser(userId);
@@ -158,15 +162,18 @@ public class TransactionService {
         System.out.printf("%-8s | %-8s | %-8s | %-12s | %-25s | %-20s%n",
                 "Txn ID", "User ID", "Book ID", "Borrow Date", "Book Title", "Borrower");
         System.out.println("-".repeat(80));
+
         for (Transaction t : active) {
             Book book = bookList.getBookById(t.getBookId());
             User user = userList.getUserById(t.getUserId());
-            String title    = book != null ? book.getTitle() : "?";
-            String userName = user != null ? user.getName()  : "?";
+            String title = book != null ? book.getTitle() : "?";
+            String userName = user != null ? user.getName() : "?";
+
             System.out.printf("%-8s | %-8s | %-8s | %-12s | %-25s | %-20s%n",
                     t.getTransactionId(), t.getUserId(), t.getBookId(),
                     t.getBorrowDateStr(), trunc(title, 25), trunc(userName, 20));
         }
+
         System.out.println("=".repeat(80));
         System.out.println("Total currently borrowed: " + active.length);
     }
@@ -196,7 +203,11 @@ public class TransactionService {
                     "Txn ID", "User ID", "Book ID",
                     "Borrow Date", "Return Date", "Status");
             pw.println("-".repeat(72));
-            for (Transaction t : all) pw.println(t);
+
+            for (Transaction t : all) {
+                pw.println(t);
+            }
+
             pw.println("=".repeat(80));
             pw.println("END OF REPORT");
 

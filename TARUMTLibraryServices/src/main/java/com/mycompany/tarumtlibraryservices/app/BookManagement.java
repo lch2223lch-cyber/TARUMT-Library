@@ -1,31 +1,16 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Main.java to edit this template
- */
 package com.mycompany.tarumtlibraryservices.app;
 
-import com.mycompany.tarumtlibraryservices.adt.Book.BookList;
+import com.mycompany.tarumtlibraryservices.adt.BookList;
 import com.mycompany.tarumtlibraryservices.model.Book;
 import com.mycompany.tarumtlibraryservices.model.BookSource;
-import com.mycompany.tarumtlibraryservices.service.BookFileManager;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.Scanner;
 
-/**
- *
- * @author junji
- */
 public class BookManagement {
 
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String[] args) {
 
         Scanner sc = new Scanner(System.in);
-        BookList bookList = new BookList();
-        BookFileManager.loadBooks(bookList);
+        BookList bookList = new BookList(); // ✅ auto load from books.txt
         int choice = 0;
 
         do {
@@ -36,12 +21,12 @@ public class BookManagement {
             System.out.println("4. Update Book");
             System.out.println("5. Delete Book");
             System.out.println("6. Exit");
-            
+
             System.out.print("Enter your choice: ");
             String input = sc.nextLine().trim();
-            
+
             if (!input.matches("[1-6]")) {
-                System.out.println("Please enter a number between 1 and 6.");
+                System.out.println("Please enter 1–6.");
                 continue;
             }
 
@@ -49,187 +34,140 @@ public class BookManagement {
 
             switch (choice) {
 
-                case 1: // CREATE
+                // ===== ADD =====
+                case 1:
                     String id;
                     while (true) {
                         System.out.print("Enter Book ID (B001): ");
                         id = sc.nextLine().trim();
 
-                        if (id.isEmpty() || !id.matches("B\\d{3}")) {
-                            System.out.println("Invalid ID format. Example: B001");
+                        if (!id.matches("B\\d{3}")) {
+                            System.out.println("Invalid ID format.");
                             continue;
                         }
 
-                        if (bookList.getBookById(id) != null) {
-                            System.out.println("Book ID already exists. Please enter another ID.");
+                        if (bookList.bookExists(id)) {
+                            System.out.println("Book ID already exists.");
                             continue;
                         }
 
-                        break; // valid and unique ID
-                    }
-
-                    String title;
-                    while (true) {
-                        System.out.print("Enter Book Title: ");
-                        title = sc.nextLine().trim();
-
-                        if (title.isEmpty() || !title.matches("[A-Za-z0-9 ,:'\\-\\.]+")) {
-                            System.out.println("Invalid book title. Try again.");
-                        } else {
-                            break; // valid input, exit loop
-                        }
-                    }
-                    
-
-                    String author;
-                    while (true) {
-                        System.out.print("Enter Author: ");
-                        author = sc.nextLine().trim();
-
-                        if (author.isEmpty()) {
-                            System.out.println("Author name cannot be empty. Try again.");
-                        } 
-                        else if (!author.matches("[A-Za-z .'-]+")) {
-                            System.out.println("Author name contains invalid characters. Try again.");
-                        } 
-                        else {
-                            break; // valid input
-                        }
-                    }
-                    
-                    BookSource source;
-                    while (true) {
-                        System.out.print("Enter Source (1 = NEW, 2 = DONATED): ");
-                        String sourceInput = sc.nextLine().trim();
-
-                        if (sourceInput.equals("1")) {
-                            source = BookSource.NEW;
-                            break;
-                        } 
-                        else if (sourceInput.equals("2")) {
-                            source = BookSource.DONATED;
-                            break;
-                        } 
-                        else {
-                            System.out.println("Invalid choice. Please enter 1 or 2.");
-                        }
-                    }
-                    
-                    Book newBook = new Book(id, title, author, source, true);
-                    
-                    if(bookList.addBook(newBook)){
-                        System.out.println("Book added successful"); 
-                        BookFileManager.addBook(newBook);
-                        
-                    } else{
-                        System.out.println("Error: Book ID already exists. Cannot be duplicate");
-                    }
-                    
-                    break;
-
-                case 2: // READ ALL
-                    if (bookList.isEmpty()) {
-                        System.out.println("No books found.");
-                    } else {
-                        bookList.displayAllBooks();
-                    }
-                    break;
-
-                case 3: // SEARCH
-                    System.out.println("Search Book By: ");
-                    System.out.println("1. Book Id");
-                    System.out.println("2. Title");
-                    System.out.println("3. Author");
-                    System.out.print("Choose: ");
-                    String searchChoice = sc.nextLine().trim();
-                    
-                    System.out.print("Enter Keyword: ");
-                    String keyword = sc.nextLine().trim();
-                    
-                    switch(searchChoice){
-                        case "1":
-                            bookList.searchByBookId(keyword);
-                            break;
-                            
-                        case "2":
-                            bookList.searchByTitle(keyword);
-                            break;
-                            
-                        case "3":
-                            bookList.searchByAuthor(keyword);
-                            break;
-                            
-                        default:
-                            System.out.println("Invalid search option.");
-                    }
-                    
-                    break;  
-
-                case 4: // UPDATE
-                    System.out.print("Enter Book ID: ");
-                    String updateId = sc.nextLine().trim();
-
-                    Book bookToUpdate = bookList.getBookById(updateId);
-
-                    if (bookToUpdate == null) {
-                        System.out.println("Book not found.");
                         break;
                     }
-                    
-                    System.out.println("Current details: " + bookToUpdate);
 
-                    System.out.print("Enter new title (leave blank to keep current): ");
-                    String newTitle = sc.nextLine().trim();
+                    System.out.print("Enter Title: ");
+                    String title = sc.nextLine();
 
-                    if (!newTitle.isEmpty()) {
-                        bookToUpdate.setTitle(newTitle);
+                    System.out.print("Enter Author: ");
+                    String author = sc.nextLine();
+
+                    BookSource source;
+                    while (true) {
+                        System.out.print("Source (1=NEW, 2=DONATED): ");
+                        String s = sc.nextLine();
+
+                        if (s.equals("1")) {
+                            source = BookSource.NEW;
+                            break;
+                        } else if (s.equals("2")) {
+                            source = BookSource.DONATED;
+                            break;
+                        }
+                        System.out.println("Invalid input.");
                     }
 
-                    System.out.print("Enter new role(leave blank to keep current): ");
-                    String newAuthor = sc.nextLine().trim();
+                    Book newBook = new Book(id, title, author, source, true);
 
-                    if (!newAuthor.isEmpty()) {
-                        bookToUpdate.setAuthor(newAuthor);
+                    if (bookList.addBook(newBook)) {
+                        bookList.saveToFile(); // ✅ NEW WAY
+                        System.out.println("Book added.");
+                    } else {
+                        System.out.println("Duplicate ID.");
                     }
-                    
-                    BookFileManager.updateBooks(bookList); //to update the txt
-
-                    System.out.println("Book updated successfully.");
                     break;
 
-                case 5: // DELETE
-                    System.out.print("Enter Book ID to delete: ");
-                    String deleteId = sc.nextLine().trim();
+                // ===== VIEW =====
+                case 2:
+                    bookList.displayAllBooks();
+                    break;
 
-                    System.out.print("Confirm delete? (Y/N): ");
-                    String confirm = sc.nextLine();
+                // ===== SEARCH =====
+                case 3:
+                    System.out.println("1. ID  2. Title  3. Author");
 
-                    if (confirm.equalsIgnoreCase("Y")) {
-                        if (bookList.removeBookById(deleteId)) {
-                            System.out.println( "This book is deleted.");
-                            
-                            //after delete the data, also need update to txt
-                            BookFileManager.updateBooks(bookList);
-                        } else {
-                            System.out.println("Book not found.");
-                        }
-                    } else {
-                        System.out.println("Delete cancelled.");
+                    String opt;
+                    while (true) {
+                        System.out.print("Choose: ");
+                        opt = sc.nextLine();
+                        if (opt.matches("[1-3]")) break;
+                        System.out.println("Invalid choice.");
                     }
-                    
+
+                    System.out.print("Keyword: ");
+                    String keyword = sc.nextLine();
+                    final String key = keyword.toLowerCase();
+
+                    switch (opt) {
+                        case "1":
+                            Book found = bookList.getBookById(keyword);
+                            System.out.println(found != null ? found : "Not found");
+                            break;
+
+                        case "2":
+                            Book[] t = bookList.searchBooksByTitle(keyword);
+                            for (Book b : t) System.out.println(b);
+                            break;
+
+                        case "3":
+                            Book[] a = bookList.searchBooksByAuthor(keyword);
+                            for (Book b : a) System.out.println(b);
+                            break;
+                    }
+                    break;
+
+                // ===== UPDATE =====
+                case 4:
+                    System.out.print("Enter Book ID: ");
+                    String uid = sc.nextLine();
+
+                    Book book = bookList.getBookById(uid);
+
+                    if (book == null) {
+                        System.out.println("Not found.");
+                        break;
+                    }
+
+                    System.out.print("New title: ");
+                    String nt = sc.nextLine();
+                    if (!nt.isEmpty()) book.setTitle(nt);
+
+                    System.out.print("New author: ");
+                    String na = sc.nextLine();
+                    if (!na.isEmpty()) book.setAuthor(na);
+
+                    bookList.saveToFile(); // ✅
+                    System.out.println("Updated.");
+                    break;
+
+                // ===== DELETE =====
+                case 5:
+                    System.out.print("Enter ID: ");
+                    String did = sc.nextLine();
+
+                    if (bookList.removeBookById(did)) {
+                        bookList.saveToFile(); // ✅
+                        System.out.println("Deleted.");
+                    } else {
+                        System.out.println("Not found.");
+                    }
                     break;
 
                 case 6:
-                    System.out.println("Exiting system...");
+                    System.out.println("Exit.");
                     break;
-
-                default:
-                    System.out.println("Invalid choice. Enter 1–6.");
             }
 
         } while (choice != 6);
 
         sc.close();
     }
-    
 }

@@ -1,6 +1,7 @@
 package com.mycompany.tarumtlibraryservices.ui;
 
-import com.mycompany.tarumtlibraryservices.adt.Book.BookList;
+import com.mycompany.tarumtlibraryservices.adt.BookList;
+import com.mycompany.tarumtlibraryservices.adt.Node;
 import com.mycompany.tarumtlibraryservices.adt.TransactionList;
 import com.mycompany.tarumtlibraryservices.adt.UserList;
 import com.mycompany.tarumtlibraryservices.model.Book;
@@ -262,19 +263,7 @@ public class BorrowReturnMenu {
 
     /** Returns all books where isAvailable == true */
     private Book[] getAvailableBooks() {
-        // Walk the BookList manually (BookList doesn't extend GenericList)
-        int cnt = 0;
-        com.mycompany.tarumtlibraryservices.adt.Book.BookNode cur = bookList.getHead();
-        while (cur != null) { if (cur.getData().isAvailable()) cnt++; cur = cur.getNext(); }
-
-        Book[] result = new Book[cnt];
-        int i = 0;
-        cur = bookList.getHead();
-        while (cur != null) {
-            if (cur.getData().isAvailable()) result[i++] = cur.getData();
-            cur = cur.getNext();
-        }
-        return result;
+        return bookList.findAll(Book::isAvailable, Book[]::new);
     }
 
     private void pause() {
