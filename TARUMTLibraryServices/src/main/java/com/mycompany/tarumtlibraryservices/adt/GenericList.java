@@ -372,7 +372,7 @@ public class GenericList<T> {
     /**
      * Load list from file
      */
-    protected void loadFromFile() {
+    public void loadFromFile() {
         if (fileName == null) {
             return;
         }
