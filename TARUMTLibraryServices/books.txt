@@ -1,0 +1,4 @@
+B001|Clean Code|Robert C Martini|NEW|true
+B002|Design Pattern|Erich Gamma|DONATED|true
+B003|Clean Code|Andrew Frank|NEW|true
+B004|DSA|Sir|DONATED|true
