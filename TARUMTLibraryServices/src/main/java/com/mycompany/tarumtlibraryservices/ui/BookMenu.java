@@ -40,12 +40,12 @@ public class BookMenu {
     }
 
     private void displayMenu() {
-        System.out.println("\n╔════════════════════════════════════════╗");
-        System.out.println("║         BOOK MANAGEMENT               ║");
-        System.out.println("╚════════════════════════════════════════╝");
+        System.out.println("\n" + "=".repeat(50));
+        System.out.println("         BOOK MANAGEMENT");
+        System.out.println("=".repeat(50));
         System.out.println("Logged in as: " + currentUser.getName()
                 + " (" + currentUser.getRoleDisplayName() + ")");
-        System.out.println("=".repeat(40));
+        System.out.println("-".repeat(40));
         System.out.println("1. Add Book");
         System.out.println("2. View All Books");
         System.out.println("3. Search Book");
@@ -107,6 +107,8 @@ public class BookMenu {
         while (true) {
             System.out.print("Enter Book Title: ");
             title = sc.nextLine().trim();
+            
+            title = capitalizeWords(title);
 
             if (title.isEmpty() || !title.matches("[A-Za-z0-9 ,:'\\-\\.]+")) {
                 System.out.println("Invalid book title. Try again.");
@@ -119,6 +121,8 @@ public class BookMenu {
         while (true) {
             System.out.print("Enter Author: ");
             author = sc.nextLine().trim();
+            
+            author = capitalizeWords(author);
 
             if (author.isEmpty()) {
                 System.out.println("Author name cannot be empty. Try again.");
@@ -149,9 +153,10 @@ public class BookMenu {
 
         if (bookList.addBook(newBook)) {
             bookList.saveToFile();
-            System.out.println("Book added successfully.");
+            System.out.println("\n[SUCCESS] Book added successfully!");
+            displaySingleBook(newBook);
         } else {
-            System.out.println("Error: Book ID already exists. Cannot be duplicate.");
+            System.out.println("[ERROR] Failed to add book.");
         }
 
         pause();
@@ -161,13 +166,16 @@ public class BookMenu {
         if (bookList.isEmpty()) {
             System.out.println("No books found.");
         } else {
-            bookList.displayAllBooks();
+            java.util.ArrayList<Book> bookArrayList = new java.util.ArrayList<>();
+            bookList.forEach(book -> bookArrayList.add(book));
+            Book[] allBooks = bookArrayList.toArray(new Book[0]);
+            displayBooksTable(allBooks);
         }
         pause();
     }
 
     private void searchBook() {
-        System.out.println("Search Book By:");
+        System.out.println("\nSearch Book By:");
         System.out.println("1. Book ID");
         System.out.println("2. Title");
         System.out.println("3. Author");
@@ -196,43 +204,35 @@ public class BookMenu {
             }
         }
 
-        final String key = keyword.toLowerCase();
-
         switch (searchChoice) {
             case "1":
-                Book found = bookList.getBookById(keyword);
-                System.out.println(found != null ? found : "Book not found.");
+                String searchId = keyword.toUpperCase();
+                Book found = bookList.getBookById(searchId);
+                if (found != null) {
+                    System.out.println("\n[RESULT] Book found:");
+                    displaySingleBook(found);
+                } else {
+                    System.out.println("\n[ERROR] Book not found with ID: " + keyword);
+                }
                 break;
 
             case "2":
-                Book[] titleResults = bookList.findAll(
-                    book -> book.getTitle() != null &&
-                            book.getTitle().toLowerCase().contains(key),
-                    Book[]::new
-                );
-
+                Book[] titleResults = bookList.searchBooksByTitle(keyword);
                 if (titleResults.length == 0) {
-                    System.out.println("No book found.");
+                    System.out.println("\n[ERROR] No books found with title containing \"" + keyword + "\"");
                 } else {
-                    for (Book b : titleResults) {
-                        System.out.println(b);
-                    }
+                    System.out.println("\n[RESULT] Found " + titleResults.length + " book(s):");
+                    displayBooksTable(titleResults);
                 }
                 break;
 
             case "3":
-                Book[] authorResults = bookList.findAll(
-                    book -> book.getAuthor() != null &&
-                            book.getAuthor().toLowerCase().contains(key),
-                    Book[]::new
-                );
-
+                Book[] authorResults = bookList.searchBooksByAuthor(keyword);
                 if (authorResults.length == 0) {
-                    System.out.println("No book found.");
+                    System.out.println("\n[ERROR] No books found by author containing \"" + keyword + "\"");
                 } else {
-                    for (Book b : authorResults) {
-                        System.out.println(b);
-                    }
+                    System.out.println("\n[RESULT] Found " + authorResults.length + " book(s):");
+                    displayBooksTable(authorResults);
                 }
                 break;
         }
@@ -242,48 +242,66 @@ public class BookMenu {
 
     private void updateBook() {
         System.out.print("Enter Book ID: ");
-        String updateId = sc.nextLine().trim();
+        String updateId = sc.nextLine().trim().toUpperCase();
 
         Book bookToUpdate = bookList.getBookById(updateId);
 
         if (bookToUpdate == null) {
-            System.out.println("Book not found.");
+            System.out.println("[ERROR] Book not found.");
             pause();
             return;
         }
 
-        System.out.println("Current details: " + bookToUpdate);
+        System.out.println("\n[CURRENT DETAILS]");
+        displaySingleBook(bookToUpdate);
 
-        System.out.print("Enter new title (leave blank to keep current): ");
+        System.out.print("\nEnter new title (leave blank to keep current): ");
         String newTitle = sc.nextLine().trim();
         if (!newTitle.isEmpty()) {
+            newTitle = capitalizeWords(newTitle);
             bookToUpdate.setTitle(newTitle);
         }
 
         System.out.print("Enter new author (leave blank to keep current): ");
         String newAuthor = sc.nextLine().trim();
         if (!newAuthor.isEmpty()) {
+            newAuthor = capitalizeWords(newAuthor);
             bookToUpdate.setAuthor(newAuthor);
         }
 
         bookList.saveToFile();
-        System.out.println("Book updated successfully.");
+        System.out.println("\n[SUCCESS] Book updated successfully!");
+        
+        System.out.println("\n[UPDATED DETAILS]");
+        displaySingleBook(bookToUpdate);
+        
         pause();
     }
 
     private void deleteBook() {
         System.out.print("Enter Book ID to delete: ");
-        String deleteId = sc.nextLine().trim();
+        String deleteId = sc.nextLine().trim().toUpperCase();
 
-        System.out.print("Confirm delete? (Y/N): ");
+        Book bookToDelete = bookList.getBookById(deleteId);
+        
+        if (bookToDelete == null) {
+            System.out.println("[ERROR] Book not found.");
+            pause();
+            return;
+        }
+
+        System.out.println("\n[BOOK TO DELETE]");
+        displaySingleBook(bookToDelete);
+
+        System.out.print("\nConfirm delete? (Y/N): ");
         String confirm = sc.nextLine().trim();
 
         if (confirm.equalsIgnoreCase("Y")) {
             if (bookList.removeBookById(deleteId)) {
                 bookList.saveToFile();
-                System.out.println("This book is deleted.");
+                System.out.println("[SUCCESS] Book deleted successfully.");
             } else {
-                System.out.println("Book not found.");
+                System.out.println("[ERROR] Book not found.");
             }
         } else {
             System.out.println("Delete cancelled.");
@@ -370,6 +388,77 @@ public class BookMenu {
             }
 
         } while (reportChoice != 7);
+    }
+
+    // ========== HELPER METHODS ==========
+    
+    private String capitalizeWords(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+        
+        String[] words = text.split(" ");
+        StringBuilder result = new StringBuilder();
+        
+        for (String word : words) {
+            if (word.length() > 0) {
+                result.append(Character.toUpperCase(word.charAt(0)))
+                      .append(word.substring(1).toLowerCase())
+                      .append(" ");
+            }
+        }
+        
+        return result.toString().trim();
+    }
+    
+    private void displayBooksTable(Book[] books) {
+        if (books == null || books.length == 0) {
+            System.out.println("No books to display.");
+            return;
+        }
+        
+        System.out.println("+" + "-".repeat(10) + "+" + "-".repeat(40) + "+" 
+            + "-".repeat(25) + "+" + "-".repeat(12) + "+" + "-".repeat(12) + "+");
+        System.out.printf("| %-8s | %-38s | %-23s | %-10s | %-10s |\n", 
+            "Book ID", "Title", "Author", "Source", "Status");
+        System.out.println("+" + "-".repeat(10) + "+" + "-".repeat(40) + "+" 
+            + "-".repeat(25) + "+" + "-".repeat(12) + "+" + "-".repeat(12) + "+");
+        
+        for (Book book : books) {
+            if (book != null) {
+                String status = book.isAvailable() ? "Available" : "Borrowed";
+                System.out.printf("| %-8s | %-38s | %-23s | %-10s | %-10s |\n",
+                    book.getBookId(),
+                    truncateString(book.getTitle(), 38),
+                    truncateString(book.getAuthor(), 23),
+                    book.getSource().toString(),
+                    status);
+            }
+        }
+        System.out.println("+" + "-".repeat(10) + "+" + "-".repeat(40) + "+" 
+            + "-".repeat(25) + "+" + "-".repeat(12) + "+" + "-".repeat(12) + "+");
+        System.out.println("Total books: " + books.length);
+    }
+    
+    private void displaySingleBook(Book book) {
+        if (book == null) {
+            System.out.println("No book to display.");
+            return;
+        }
+        
+        System.out.println("+" + "-".repeat(50) + "+");
+        System.out.printf("| %-15s: %-32s |\n", "Book ID", book.getBookId());
+        System.out.printf("| %-15s: %-32s |\n", "Title", book.getTitle());
+        System.out.printf("| %-15s: %-32s |\n", "Author", book.getAuthor());
+        System.out.printf("| %-15s: %-32s |\n", "Source", book.getSource());
+        System.out.printf("| %-15s: %-32s |\n", "Status", book.isAvailable() ? "Available" : "Borrowed");
+        System.out.println("+" + "-".repeat(50) + "+");
+    }
+    
+    private String truncateString(String str, int maxLength) {
+        if (str == null) return "";
+        if (str.length() <= maxLength) return str;
+        return str.substring(0, maxLength - 3) + "...";
     }
 
     private void pause() {

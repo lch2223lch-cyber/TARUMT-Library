@@ -4,6 +4,9 @@ import com.mycompany.tarumtlibraryservices.adt.RoomList;
 import com.mycompany.tarumtlibraryservices.model.Room;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * Control class for Room Management.
@@ -18,8 +21,9 @@ public class RoomManager {
         this.roomList = roomList;
     }
 
+    // ========== BASIC CRUD OPERATIONS ==========
+    
     public boolean addRoom(String id, String name, int capacity) {
-        // Standardize: convert to uppercase and trim
         String standardId = id.trim().toUpperCase();
         String standardName = capitalizeWords(name.trim());
         
@@ -61,6 +65,9 @@ public class RoomManager {
         }
     }
 
+
+    // ========== REPORT METHODS ==========
+    
     private void displayRoomReport(Room room) {
         String[] slots = {"09:00-11:00", "11:00-13:00", "13:00-15:00", "15:00-17:00"};
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -240,6 +247,169 @@ public class RoomManager {
         System.out.println("=".repeat(80));
     }
     
+    // ========== EXPORT REPORT TO FILE ==========
+    
+    public void exportReportToFile() {
+        String filename = "RoomReport_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".txt";
+        
+        try (PrintWriter writer = new PrintWriter(new FileWriter(filename))) {
+            writer.println("=".repeat(80));
+            writer.println("                    COMPREHENSIVE ROOM REPORT");
+            writer.println("=".repeat(80));
+            writer.println("Generated on: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            writer.println();
+            
+            // Summary Statistics
+            int totalRooms = roomList.getSize();
+            int totalSlots = totalRooms * 4;
+            int totalBookings = 0;
+            int availableRooms = 0;
+            
+            Room[] allRooms = getAllRooms();
+            for (Room room : allRooms) {
+                if (room.isAvailable()) {
+                    availableRooms++;
+                }
+                for (int i = 0; i < 4; i++) {
+                    if (!room.isSlotAvailable(i)) {
+                        totalBookings++;
+                    }
+                }
+            }
+            
+            double occupancyRate = totalSlots > 0 ? (totalBookings * 100.0 / totalSlots) : 0;
+            
+            writer.println("[1] SUMMARY STATISTICS");
+            writer.println("-".repeat(50));
+            writer.printf("Total Rooms        : %d%n", totalRooms);
+            writer.printf("Total Time Slots   : %d%n", totalSlots);
+            writer.printf("Booked Slots       : %d (%.1f%%)%n", totalBookings, occupancyRate);
+            writer.printf("Available Slots    : %d (%.1f%%)%n", (totalSlots - totalBookings), (100 - occupancyRate));
+            writer.printf("Rooms with Availability : %d%n", availableRooms);
+            writer.printf("Fully Booked Rooms : %d%n", (totalRooms - availableRooms));
+            
+            writer.println("\n[2] ROOM DETAILS");
+            writer.println("-".repeat(50));
+            
+            String[] slots = {"09:00-11:00", "11:00-13:00", "13:00-15:00", "15:00-17:00"};
+            for (Room room : allRooms) {
+                writer.printf("%nRoom: %s - %s%n", room.getRoomId().toUpperCase(), room.getRoomName());
+                writer.printf("Capacity: %d people%n", room.getCapacity());
+                int roomBookings = 0;
+                for (int i = 0; i < 4; i++) {
+                    if (room.isSlotAvailable(i)) {
+                        writer.printf("  %s: AVAILABLE%n", slots[i]);
+                    } else {
+                        String bookedBy = room.getBookedBy(i);
+                        writer.printf("  %s: BOOKED BY %s%n", slots[i], bookedBy != null ? bookedBy : "Unknown");
+                        roomBookings++;
+                    }
+                }
+                writer.printf("Booked Slots: %d/4 (%.0f%%)%n", roomBookings, (roomBookings * 100.0 / 4));
+            }
+            
+            writer.println("\n[3] RECOMMENDATIONS");
+            writer.println("-".repeat(50));
+            
+            if (totalBookings == 0) {
+                writer.println("-> No bookings yet. Encourage students to use the facilities.");
+            } else if (occupancyRate < 30) {
+                writer.printf("-> Low occupancy rate (%.1f%%). Consider promoting room booking services.%n", occupancyRate);
+            } else if (occupancyRate > 70) {
+                writer.printf("-> High demand detected (%.1f%% occupancy). Consider adding more study rooms.%n", occupancyRate);
+            } else {
+                writer.printf("-> Moderate occupancy rate (%.1f%%). Good usage of facilities.%n", occupancyRate);
+            }
+            
+            writer.println("\n" + "=".repeat(80));
+            writer.println("END OF REPORT");
+            
+            System.out.println("[SUCCESS] Report exported to: " + filename);
+        } catch (IOException e) {
+            System.out.println("[ERROR] Failed to export report: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * Display all bookings across all rooms (for Librarian/Admin)
+     */
+    public void displayAllBookings() {
+        Room[] allRooms = getAllRooms();
+        String[] slots = {"09:00-11:00", "11:00-13:00", "13:00-15:00", "15:00-17:00"};
+        boolean hasBookings = false;
+        int totalBookings = 0;
+
+        System.out.println("\n" + "=".repeat(80));
+        System.out.println("                    ALL ROOM BOOKINGS");
+        System.out.println("=".repeat(80));
+
+        for (Room room : allRooms) {
+            boolean roomHasBookings = false;
+
+            for (int i = 0; i < 4; i++) {
+                if (!room.isSlotAvailable(i)) {
+                    if (!roomHasBookings) {
+                        System.out.println("\n+--------------------------------------------------------------------+");
+                        System.out.printf("| Room: %-60s |\n", room.getRoomId().toUpperCase() + " - " + room.getRoomName());
+                        System.out.println("|--------------------------------------------------------------------|");
+                        roomHasBookings = true;
+                    }
+                    String bookedBy = room.getBookedBy(i);
+                    System.out.printf("| %-15s : BOOKED BY: %-30s |\n", slots[i], bookedBy != null ? bookedBy : "Unknown");
+                    hasBookings = true;
+                    totalBookings++;
+                }
+            }
+            if (roomHasBookings) {
+                System.out.println("+--------------------------------------------------------------------+");
+            }
+        }
+
+        if (!hasBookings) {
+            System.out.println("\n  No bookings found.");
+        } else {
+            System.out.println("\n  Total Bookings: " + totalBookings);
+        }
+        System.out.println("=".repeat(80));
+    }
+
+    /**
+     * Cancel any booking (for Librarian/Admin)
+     */
+    public boolean cancelAnyBooking(String roomId, int slotIndex) {
+        Room room = roomList.getRoomById(roomId);
+        if (room != null && !room.isSlotAvailable(slotIndex)) {
+            String bookedBy = room.getBookedBy(slotIndex);
+            room.unlockSlot(slotIndex);
+            saveData();
+            System.out.println("[SUCCESS] Booking cancelled for user: " + bookedBy);
+            return true;
+        }
+        System.out.println("[ERROR] Booking not found or slot already available.");
+        return false;
+    }
+
+    /**
+     * Cancel any booking by Book ID and User ID (alternative method)
+     */
+    public boolean cancelAnyBookingByDetails(String roomId, String userId) {
+        Room room = roomList.getRoomById(roomId);
+        if (room == null) {
+            System.out.println("[ERROR] Room not found.");
+            return false;
+        }
+
+        for (int i = 0; i < 4; i++) {
+            if (!room.isSlotAvailable(i) && userId.equals(room.getBookedBy(i))) {
+                room.unlockSlot(i);
+                saveData();
+                System.out.println("[SUCCESS] Booking cancelled for room: " + roomId + " for user: " + userId);
+                return true;
+            }
+        }
+        System.out.println("[ERROR] No booking found for user " + userId + " in room " + roomId);
+        return false;
+    }
     // ========== HELPER METHODS ==========
     
     private String capitalizeWords(String text) {
@@ -291,46 +461,5 @@ public class RoomManager {
     
     public void saveData() {
         roomList.saveToFile();
-    }
-    
-    /**
-     * Optional: Run this once to fix existing room names to proper capitalization
-     * Call this from RoomTest main method temporarily
-     */
-    public void fixRoomNamesCapitalization() {
-        Room[] allRooms = getAllRooms();
-        boolean changed = false;
-        
-        System.out.println("\n[SYSTEM] Checking room names for capitalization...");
-        
-        for (Room room : allRooms) {
-            String currentName = room.getRoomName();
-            String properName = capitalizeWords(currentName);
-            
-            if (!currentName.equals(properName)) {
-                System.out.println("  Fixing: \"" + currentName + "\" -> \"" + properName + "\"");
-                // Create new room with proper name
-                Room newRoom = new Room(room.getRoomId(), properName, room.getCapacity());
-                
-                // Copy slot bookings
-                for (int i = 0; i < 4; i++) {
-                    if (!room.isSlotAvailable(i)) {
-                        newRoom.lockSlot(i, room.getBookedBy(i));
-                    }
-                }
-                
-                // Remove old room and add new one
-                removeRoom(room.getRoomId());
-                roomList.add(newRoom);
-                changed = true;
-            }
-        }
-        
-        if (changed) {
-            saveData();
-            System.out.println("[SUCCESS] Room names fixed!");
-        } else {
-            System.out.println("[INFO] All room names are already properly capitalized.");
-        }
     }
 }

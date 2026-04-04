@@ -190,10 +190,10 @@ public class MainApp {
     }
 
     private static User loginUser(Scanner sc, AuthService authService) {
-        System.out.println("\n╔════════════════════════════════════════╗");
-        System.out.println("║     TARUMT LIBRARY SERVICES           ║");
-        System.out.println("║            LOGIN                      ║");
-        System.out.println("╚════════════════════════════════════════╝");
+        System.out.println("\n" + "=".repeat(50));
+        System.out.println("        TARUMT LIBRARY SERVICES");
+        System.out.println("               LOGIN");
+        System.out.println("=".repeat(50));
 
         int attempts = 0;
         while (attempts < 3) {

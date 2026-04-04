@@ -1,7 +1,6 @@
 package com.mycompany.tarumtlibraryservices.ui;
 
 import com.mycompany.tarumtlibraryservices.adt.BookList;
-import com.mycompany.tarumtlibraryservices.adt.Node;
 import com.mycompany.tarumtlibraryservices.adt.TransactionList;
 import com.mycompany.tarumtlibraryservices.adt.UserList;
 import com.mycompany.tarumtlibraryservices.model.Book;
@@ -10,12 +9,6 @@ import com.mycompany.tarumtlibraryservices.model.User;
 import com.mycompany.tarumtlibraryservices.service.TransactionService;
 import java.util.Scanner;
 
-/**
- * BorrowReturnMenu - UI for the Borrow & Return module.
- * Handles borrowing, returning, transaction history, and reports.
- *
- * @author [Your Name]
- */
 public class BorrowReturnMenu {
 
     private final Scanner sc;
@@ -42,7 +35,6 @@ public class BorrowReturnMenu {
             String input = sc.nextLine().trim();
 
             int max = getMaxChoice();
-            // Build valid pattern dynamically
             if (!input.matches("[1-" + max + "]")) {
                 System.out.println("Please enter a number between 1 and " + max + ".");
                 continue;
@@ -51,22 +43,19 @@ public class BorrowReturnMenu {
         } while (handleChoice(choice));
     }
 
-    // ========== MENU DISPLAY ==========
-
     private void displayMenu() {
-        System.out.println("\n╔════════════════════════════════════════╗");
-        System.out.println("║         BORROW & RETURN               ║");
-        System.out.println("╚════════════════════════════════════════╝");
+        System.out.println("\n" + "=".repeat(50));
+        System.out.println("         BORROW & RETURN");
+        System.out.println("=".repeat(50));
         System.out.println("Logged in as: " + currentUser.getName()
                 + " (" + currentUser.getRoleDisplayName() + ")");
-        System.out.println("=".repeat(40));
+        System.out.println("-".repeat(40));
 
         int n = 1;
         System.out.println(n++ + ". Borrow a Book");
         System.out.println(n++ + ". Return a Book");
         System.out.println(n++ + ". My Transaction History");
 
-        // Librarians and Admins get extra options
         if (currentUser.canViewReports()) {
             System.out.println(n++ + ". View All Borrowed Books");
             System.out.println(n++ + ". Full Transaction Report");
@@ -79,49 +68,37 @@ public class BorrowReturnMenu {
     }
 
     private int getMaxChoice() {
-        int base = 4; // Borrow, Return, My History, Back
-        if (currentUser.canViewReports()) base += 4; // All Borrowed, Full Report, By User, Export
+        int base = 4;
+        if (currentUser.canViewReports()) base += 4;
         return base;
     }
-
-    // ========== CHOICE HANDLER ==========
 
     private boolean handleChoice(int choice) {
         int n = 1;
 
-        // 1. Borrow a Book
         if (choice == n++) { borrowBook(); return true; }
-
-        // 2. Return a Book
         if (choice == n++) { returnBook(); return true; }
-
-        // 3. My Transaction History
         if (choice == n++) {
             transactionService.printUserHistory(currentUser.getUserId());
             pause();
             return true;
         }
 
-        // Librarian/Admin-only options
         if (currentUser.canViewReports()) {
-            // 4. View All Borrowed Books
             if (choice == n++) {
                 transactionService.printActiveBorrows();
                 pause();
                 return true;
             }
-            // 5. Full Transaction Report
             if (choice == n++) {
                 transactionService.printFullReport();
                 pause();
                 return true;
             }
-            // 6. View History by User
             if (choice == n++) {
                 viewHistoryByUser();
                 return true;
             }
-            // 7. Export Report to File
             if (choice == n++) {
                 transactionService.exportReportToFile();
                 pause();
@@ -129,19 +106,15 @@ public class BorrowReturnMenu {
             }
         }
 
-        // Back to Main Menu (last option)
         System.out.println("Returning to main menu...");
         return false;
     }
 
-    // ========== BORROW ==========
-
     private void borrowBook() {
-        System.out.println("\n╔════════════════════════════════════════╗");
-        System.out.println("║             BORROW A BOOK             ║");
-        System.out.println("╚════════════════════════════════════════╝");
+        System.out.println("\n" + "=".repeat(50));
+        System.out.println("             BORROW A BOOK");
+        System.out.println("=".repeat(50));
 
-        // Print available books first
         Book[] available = getAvailableBooks();
         if (available.length == 0) {
             System.out.println("No books are currently available for borrowing.");
@@ -159,15 +132,12 @@ public class BorrowReturnMenu {
         }
         System.out.println("-".repeat(50));
 
-        // Get Book ID
         System.out.print("\nEnter Book ID to borrow: ");
-        String bookId = sc.nextLine().trim();
+        String bookId = sc.nextLine().trim().toUpperCase();
         if (bookId.isEmpty()) { System.out.println("Cancelled."); pause(); return; }
 
-        // Determine which user is borrowing
         String userId = currentUser.getUserId();
 
-        // Admins/Librarians can borrow on behalf of a student
         if (currentUser.canViewReports()) {
             System.out.print("Enter User ID (press Enter to borrow for yourself [" + userId + "]): ");
             String inputId = sc.nextLine().trim();
@@ -178,32 +148,26 @@ public class BorrowReturnMenu {
 
         if (result.startsWith("SUCCESS")) {
             String txnId = result.split("\\|")[1];
-            System.out.println("\n✅ Book borrowed successfully!");
+            System.out.println("\n[SUCCESS] Book borrowed successfully!");
             System.out.println("   Transaction ID : " + txnId);
             System.out.println("   User           : " + userId);
             System.out.println("   Book ID        : " + bookId);
         } else {
-            System.out.println("\n❌ " + result);
+            System.out.println("\n[ERROR] " + result);
         }
         pause();
     }
 
-    // ========== RETURN ==========
-
     private void returnBook() {
-        System.out.println("\n╔════════════════════════════════════════╗");
-        System.out.println("║             RETURN A BOOK             ║");
-        System.out.println("╚════════════════════════════════════════╝");
+        System.out.println("\n" + "=".repeat(50));
+        System.out.println("             RETURN A BOOK");
+        System.out.println("=".repeat(50));
 
-        // Show the user's currently borrowed books
         Transaction[] myBorrows;
         if (currentUser.canViewReports()) {
-            // Librarian/Admin sees all currently borrowed
             myBorrows = transactionList.getAllActiveBorrows();
         } else {
-            // Student sees only their own active borrows
             myBorrows = transactionList.getTransactionsByUser(currentUser.getUserId());
-            // Filter to only BORROWED
             int cnt = 0;
             for (Transaction t : myBorrows) if (t.isBorrowed()) cnt++;
             Transaction[] filtered = new Transaction[cnt];
@@ -233,23 +197,21 @@ public class BorrowReturnMenu {
         System.out.println("-".repeat(60));
 
         System.out.print("\nEnter Book ID to return: ");
-        String bookId = sc.nextLine().trim();
+        String bookId = sc.nextLine().trim().toUpperCase();
         if (bookId.isEmpty()) { System.out.println("Cancelled."); pause(); return; }
 
         String result = transactionService.returnBook(bookId);
 
         if (result.startsWith("SUCCESS")) {
             String txnId = result.split("\\|")[1];
-            System.out.println("\n✅ Book returned successfully!");
+            System.out.println("\n[SUCCESS] Book returned successfully!");
             System.out.println("   Transaction ID : " + txnId);
             System.out.println("   Book ID        : " + bookId);
         } else {
-            System.out.println("\n❌ " + result);
+            System.out.println("\n[ERROR] " + result);
         }
         pause();
     }
-
-    // ========== HISTORY BY USER ==========
 
     private void viewHistoryByUser() {
         System.out.print("Enter User ID: ");
@@ -259,9 +221,6 @@ public class BorrowReturnMenu {
         pause();
     }
 
-    // ========== HELPERS ==========
-
-    /** Returns all books where isAvailable == true */
     private Book[] getAvailableBooks() {
         return bookList.findAll(Book::isAvailable, Book[]::new);
     }

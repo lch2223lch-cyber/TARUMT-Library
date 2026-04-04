@@ -1,9 +1,11 @@
 package com.mycompany.tarumtlibraryservices.ui;
 
 import com.mycompany.tarumtlibraryservices.adt.BookList;
+import com.mycompany.tarumtlibraryservices.adt.RoomList;
 import com.mycompany.tarumtlibraryservices.adt.TransactionList;
 import com.mycompany.tarumtlibraryservices.adt.UserList;
 import com.mycompany.tarumtlibraryservices.model.User;
+import com.mycompany.tarumtlibraryservices.service.RoomManager;
 import java.util.Scanner;
 
 public class MainMenu {
@@ -13,6 +15,7 @@ public class MainMenu {
     private final BookList bookList;
     private final TransactionList transactionList;
     private final User currentUser;
+    private final RoomManager roomManager;
 
     public MainMenu(Scanner sc, UserList userList, BookList bookList,
                     TransactionList transactionList, User currentUser) {
@@ -21,6 +24,10 @@ public class MainMenu {
         this.bookList = bookList;
         this.transactionList = transactionList;
         this.currentUser = currentUser;
+        
+        // Initialize RoomManager
+        RoomList roomList = new RoomList("rooms.txt");
+        this.roomManager = new RoomManager(roomList);
     }
 
     public void start() {
@@ -48,71 +55,69 @@ public class MainMenu {
     }
 
     private void displayMainMenu() {
-        System.out.println("\n╔════════════════════════════════════════╗");
-        System.out.println("║   TARUMT LIBRARY MANAGEMENT SYSTEM     ║");
-        System.out.println("╚════════════════════════════════════════╝");
+        System.out.println("\n" + "=".repeat(50));
+        System.out.println("     TARUMT LIBRARY MANAGEMENT SYSTEM");
+        System.out.println("=".repeat(50));
         System.out.println("Welcome, " + currentUser.getName()
                 + " (" + currentUser.getRoleDisplayName() + ")");
-        System.out.println("=".repeat(40));
+        System.out.println("-".repeat(40));
 
         int menuNum = 1;
 
         System.out.println("\nMAIN MENU:");
         System.out.println("-".repeat(40));
 
-        // Module 1: User Management
         System.out.println(menuNum++ + ". User Management");
-
-        // Module 2: Book Management
         System.out.println(menuNum++ + ". Book Management");
-
-        // Module 3: Borrow & Return
         System.out.println(menuNum++ + ". Borrow & Return");
-
-        // Module 4: Room Booking
         System.out.println(menuNum++ + ". Room Booking");
-
-        // Logout
         System.out.println(menuNum + ". Logout");
 
         System.out.println("=".repeat(40));
     }
 
     private int getMaxChoice() {
-        return 5; // 4 modules + 1 logout = 5
+        return 5;
     }
 
     private boolean handleMenuChoice(int choice) {
         switch (choice) {
             case 1:
-                // Module 1: User Management
                 UserMenu userMenu = new UserMenu(sc, userList, currentUser);
                 userMenu.start();
                 return true;
 
             case 2:
-                // Module 2: Book Management
                 BookMenu bookMenu = new BookMenu(sc, currentUser, bookList);
                 bookMenu.start();
                 return true;
 
             case 3:
-                // Module 3: Borrow & Return
                 BorrowReturnMenu borrowMenu = new BorrowReturnMenu(
                         sc, currentUser, bookList, userList, transactionList);
                 borrowMenu.start();
                 return true;
 
             case 4:
-                // Module 4: Room Booking
-                RoomMenu roomMenu = new RoomMenu(sc, currentUser);
-                roomMenu.start();
+                // Module 4: Room Booking/Management
+                if (currentUser.getRole().equals(User.ROLE_ADMIN)) {
+                    // Admin gets full menu
+                    RoomMenu adminMenu = new RoomMenu(roomManager, sc, currentUser);
+                    adminMenu.displayMenu();
+                } else if (currentUser.getRole().equals(User.ROLE_LIBRARIAN)) {
+                    // Librarian gets limited menu (no add/delete rooms)
+                    RoomMenu librarianMenu = new RoomMenu(roomManager, sc, currentUser);
+                    librarianMenu.displayMenu();
+                } else if (currentUser.getRole().equals(User.ROLE_STUDENT)) {
+                    // Student gets booking menu only
+                    StudentRoomMenu studentMenu = new StudentRoomMenu(roomManager, currentUser);
+                    studentMenu.displayMenu();
+                } else {
+                    System.out.println("\n[ACCESS DENIED] You don't have permission for this module.");
+                }
                 return true;
 
-            case 5:
-                // Logout
-                System.out.println("\nGoodbye, " + currentUser.getName() + "!");
-                return false;
+            
 
             default:
                 return true;
