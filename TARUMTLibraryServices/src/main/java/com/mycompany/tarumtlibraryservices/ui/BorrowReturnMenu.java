@@ -9,6 +9,12 @@ import com.mycompany.tarumtlibraryservices.model.User;
 import com.mycompany.tarumtlibraryservices.service.TransactionService;
 import java.util.Scanner;
 
+/**
+ * BorrowReturnMenu - UI controller for the Borrow and Return module.
+ * Handles borrowing, returning books, transaction history, and reports.
+ *
+ * @author Jeffery Lee Jia Hao
+ */
 public class BorrowReturnMenu {
 
     private final Scanner sc;

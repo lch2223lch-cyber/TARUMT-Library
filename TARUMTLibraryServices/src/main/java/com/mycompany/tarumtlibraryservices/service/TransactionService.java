@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter;
 /**
  * TransactionService - Business logic for borrow and return operations.
  *
- * @author [Your Name]
+ * @author Jeffery Lee Jia Hao
  */
 public class TransactionService {
 

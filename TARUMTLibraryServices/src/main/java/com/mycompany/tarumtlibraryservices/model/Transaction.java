@@ -6,7 +6,7 @@ import java.time.format.DateTimeFormatter;
 /**
  * Represents a single borrow/return transaction in the library system.
  *
- * @author [Your Name]
+ * @author Jeffery Lee Jia Hao
  */
 public class Transaction {
 

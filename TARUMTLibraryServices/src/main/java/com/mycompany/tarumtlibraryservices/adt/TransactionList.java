@@ -7,7 +7,7 @@ import java.time.LocalDate;
  * TransactionList ADT - Manages Transaction objects.
  * Extends GenericList<Transaction> with transaction-specific operations.
  *
- * @author [Your Name]
+ * @author Jeffery Lee Jia Hao
  */
 public class TransactionList extends GenericList<Transaction> {
 
